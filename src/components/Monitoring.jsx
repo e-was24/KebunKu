@@ -6,22 +6,34 @@ import './js/Animation';
 // SVG Icons
 const Icons = {
     Moisture: () => (
-        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+        </svg>
     ),
     Temp: () => (
-        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z" />
+        </svg>
     ),
     Pump: () => (
-        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18.36 6.64a9 9 0 1 1-12.73 0" /><line x1="12" y1="2" x2="12" y2="12" />
+        </svg>
     ),
     Download: () => (
-        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+        </svg>
     ),
     History: () => (
-        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+        </svg>
     ),
     Power: () => (
-        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18.36 6.64a9 9 0 1 1-12.73 0" /><line x1="12" y1="2" x2="12" y2="12" />
+        </svg>
     )
 };
 
@@ -51,13 +63,12 @@ const LogEntry = ({ row, isActive }) => {
 // Mini Flowchart (Sparkline) Component
 const MiniFlowchart = ({ data }) => {
     if (!data || data.length < 2) return null;
-    
-    // Reverse to show chronological order (left to right)
+
     const points = [...data].reverse().map(item => item.nilai);
     const maxVal = 100;
-    const width = 200; // Increased base width for better initial coordinate calculation
+    const width  = 200;
     const height = 40;
-    
+
     const svgPoints = points.map((val, i) => {
         const x = (i / (points.length - 1)) * width;
         const y = height - (val / maxVal) * height;
@@ -67,20 +78,34 @@ const MiniFlowchart = ({ data }) => {
     return (
         <div className="mini-flowchart">
             <svg width="100%" height="auto" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
-                <polyline
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    points={svgPoints}
-                />
+                <polyline fill="none" stroke="currentColor" strokeWidth="2" points={svgPoints} />
             </svg>
         </div>
     );
 };
 
+// Temperature Status Helper
+const getTempStatus = (temp) => {
+    if (temp === null) return { label: 'Menunggu data...', dotClass: '' };
+    if (temp > 35)    return { label: 'Suhu Terlalu Tinggi', dotClass: 'danger-dot' };
+    if (temp > 28)    return { label: 'Suhu Hangat', dotClass: 'warning' };
+    return              { label: 'Suhu Normal', dotClass: 'healthy' };
+};
+
 function Monitoring() {
-    const { moisture, systemStatus, information, history, sendPumpCommand, sendSystemCommand, downloadData } = useEsp32Controller();
+    const {
+        moisture,
+        temperature,
+        systemStatus,
+        information,
+        history,
+        sendPumpCommand,
+        sendSystemCommand,
+        downloadData
+    } = useEsp32Controller();
+
     const [isDetailActive, setIsDetailActive] = useState(false);
+    const tempStatus = getTempStatus(temperature);
 
     return (
         <div className="monitoring-wrapper">
@@ -106,7 +131,7 @@ function Monitoring() {
                     </div>
                 </section>
 
-                {/* Temperature Controls/Details */}
+                {/* Temperature Card */}
                 <section className="card card-detail">
                     <div className="card-header" onClick={() => setIsDetailActive(!isDetailActive)}>
                         <div className="header-title">
@@ -117,16 +142,24 @@ function Monitoring() {
                             {isDetailActive ? 'Sembunyikan' : 'Lihat Detail'}
                         </button>
                     </div>
-                    
+
                     <div className={`detail-content ${isDetailActive ? 'show' : ''}`}>
                         <div className="temp-metric">
-                            <span className="label">Suhu Atas</span>
-                            <span className="value">28.5<span className="unit">°C</span></span>
+                            <span className="label">Suhu Sensor DS18B20</span>
+                            <span className="value">
+                                {temperature !== null
+                                    ? <>{temperature.toFixed(1)}<span className="unit">°C</span></>
+                                    : <span className="no-data">Menunggu data...</span>
+                                }
+                            </span>
                         </div>
-                        <div className="temp-metric">
-                            <span className="label">Suhu Bawah (Media Tanam)</span>
-                            <span className="value">24.2<span className="unit">°C</span></span>
-                        </div>
+
+                        {temperature !== null && (
+                            <div className="status-indicator" style={{ marginTop: '0.5rem' }}>
+                                <span className={`dot ${tempStatus.dotClass}`}></span>
+                                {tempStatus.label}
+                            </div>
+                        )}
                     </div>
                 </section>
 
@@ -136,14 +169,23 @@ function Monitoring() {
                     <div className="card-content">
                         <h3>Kontrol Sistem</h3>
                         <div className="status-indicator">
-                            <span className={`dot ${systemStatus === 'ON' ? 'healthy' : systemStatus === 'STARTING...' ? 'warning' : 'danger-dot'}`}></span>
+                            <span className={`dot ${
+                                systemStatus === 'ON'         ? 'healthy'    :
+                                systemStatus === 'STARTING...' ? 'warning'  : 'danger-dot'
+                            }`}></span>
                             Sistem: {systemStatus}
                         </div>
                         <div className="button-group">
-                            <button className={`btn btn-success ${systemStatus === 'ON' || systemStatus === 'STARTING...' ? 'active' : ''}`} onClick={() => sendSystemCommand('START')}>
+                            <button
+                                className={`btn btn-success ${systemStatus === 'ON' || systemStatus === 'STARTING...' ? 'active' : ''}`}
+                                onClick={() => sendSystemCommand('START')}
+                            >
                                 Mulai
                             </button>
-                            <button className={`btn btn-warning ${systemStatus === 'OFF' ? 'active' : ''}`} onClick={() => sendSystemCommand('STOP')}>
+                            <button
+                                className={`btn btn-warning ${systemStatus === 'OFF' ? 'active' : ''}`}
+                                onClick={() => sendSystemCommand('STOP')}
+                            >
                                 Berhenti
                             </button>
                         </div>
@@ -219,4 +261,4 @@ function Monitoring() {
     );
 }
 
-export default Monitoring;
+export default Monitoring;
