@@ -31,7 +31,12 @@ const useEsp32Controller = () => {
                     now.toLocaleDateString('id-ID', { weekday: 'long' }) + ', ' +
                     now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false });
 
-                const newDataPoint = { timestamp: Date.now(), waktu: waktuDisplay, nilai: numVal };
+                const newDataPoint = {
+                    timestamp: Date.now(),
+                    waktu: waktuDisplay,
+                    nilai: numVal,
+                    suhu: null          // diisi saat data suhu datang
+                };
 
                 setMoisture(numVal);
                 setSystemStatus('ON');
@@ -47,7 +52,18 @@ const useEsp32Controller = () => {
                     setTemperature(null);
                 } else {
                     const suhuVal = parseFloat(val);
-                    if (!isNaN(suhuVal)) setTemperature(suhuVal);
+                    if (!isNaN(suhuVal)) {
+                        setTemperature(suhuVal);
+
+                        // Merge suhu ke data history terbaru
+                        setHistory(prev => {
+                            if (prev.length === 0) return prev;
+                            const updated = [...prev];
+                            updated[0] = { ...updated[0], suhu: suhuVal };
+                            localStorage.setItem('sensorHistory', JSON.stringify(updated));
+                            return updated;
+                        });
+                    }
                 }
             }
         });
@@ -89,8 +105,10 @@ const useEsp32Controller = () => {
             type     = 'application/json';
             filename = 'data_sensor.json';
         } else {
-            content  = 'Waktu,Kelembaban (%)\n' +
-                       dataTerfilter.map(r => `"${r.waktu}","${r.nilai}"`).join('\n');
+            content = 'Waktu,Kelembaban (%),Suhu (°C)\n' +
+                dataTerfilter.map(r =>
+                    `"${r.waktu}","${r.nilai}","${r.suhu !== null && r.suhu !== undefined ? r.suhu : '-'}"`
+                ).join('\n');
             type     = 'text/csv';
             filename = 'data_sensor.csv';
         }

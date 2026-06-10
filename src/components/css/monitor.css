@@ -465,4 +465,18 @@ body {
     .hero-value {
         font-size: 3rem;
     }
-}
+}
+
+.log-item,
+.log-header {
+    display: grid;
+    grid-template-columns: 1fr 90px 70px;
+    gap: 8px;
+    align-items: center;
+}
+
+.log-temp {
+    text-align: right;
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+}

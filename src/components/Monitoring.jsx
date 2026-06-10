@@ -3,7 +3,6 @@ import useEsp32Controller from '../hook/esp32Controller';
 import './css/monitor.css';
 import './js/Animation';
 
-// SVG Icons
 const Icons = {
     Moisture: () => (
         <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -37,7 +36,6 @@ const Icons = {
     )
 };
 
-// Log Entry Component
 const LogEntry = ({ row, isActive }) => {
     const prevValue = useRef(row.nilai);
     const [flash, setFlash] = useState('');
@@ -56,11 +54,13 @@ const LogEntry = ({ row, isActive }) => {
         <div className={`log-item ${flash} ${!isActive ? 'hidden' : ''}`}>
             <span className="log-time">{row.waktu}</span>
             <span className="log-value">{row.nilai}%</span>
+            <span className="log-temp">
+                {row.suhu !== null && row.suhu !== undefined ? `${row.suhu}°C` : '—'}
+            </span>
         </div>
     );
 };
 
-// Mini Flowchart (Sparkline) Component
 const MiniFlowchart = ({ data }) => {
     if (!data || data.length < 2) return null;
 
@@ -84,7 +84,6 @@ const MiniFlowchart = ({ data }) => {
     );
 };
 
-// Temperature Status Helper
 const getTempStatus = (temp) => {
     if (temp === null) return { label: 'Menunggu data...', dotClass: '' };
     if (temp > 35)    return { label: 'Suhu Terlalu Tinggi', dotClass: 'danger-dot' };
@@ -115,7 +114,7 @@ function Monitoring() {
             </header>
 
             <main className="dashboard-grid">
-                {/* Main Moisture Card */}
+                {/* Moisture Card */}
                 <section className="card card-hero">
                     <div className="card-icon"><Icons.Moisture /></div>
                     <div className="card-content">
@@ -145,7 +144,7 @@ function Monitoring() {
 
                     <div className={`detail-content ${isDetailActive ? 'show' : ''}`}>
                         <div className="temp-metric">
-                            <span className="label">Suhu Sensor DS18B20</span>
+                            <span className="label">Suhu DHT22</span>
                             <span className="value">
                                 {temperature !== null
                                     ? <>{temperature.toFixed(1)}<span className="unit">°C</span></>
@@ -153,7 +152,6 @@ function Monitoring() {
                                 }
                             </span>
                         </div>
-
                         {temperature !== null && (
                             <div className="status-indicator" style={{ marginTop: '0.5rem' }}>
                                 <span className={`dot ${tempStatus.dotClass}`}></span>
@@ -170,8 +168,8 @@ function Monitoring() {
                         <h3>Kontrol Sistem</h3>
                         <div className="status-indicator">
                             <span className={`dot ${
-                                systemStatus === 'ON'         ? 'healthy'    :
-                                systemStatus === 'STARTING...' ? 'warning'  : 'danger-dot'
+                                systemStatus === 'ON'          ? 'healthy'   :
+                                systemStatus === 'STARTING...' ? 'warning'   : 'danger-dot'
                             }`}></span>
                             Sistem: {systemStatus}
                         </div>
@@ -244,7 +242,8 @@ function Monitoring() {
                     </div>
                     <div className="log-header">
                         <span>Waktu</span>
-                        <span>Nilai Kelembaban (%)</span>
+                        <span>Kelembaban (%)</span>
+                        <span>Suhu (°C)</span>
                     </div>
                     <div className="logs-container">
                         {history.length > 0 ? (
