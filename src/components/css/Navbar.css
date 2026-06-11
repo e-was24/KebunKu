@@ -1,0 +1,124 @@
+/* Mengimpor font Outfit jika belum ada di project */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&display=swap');
+
+:root {
+    --bg-dark: #0a110d;
+    --bg-card: rgba(26, 49, 44, 0.7); /* Disesuaikan sedikit agar efek glass lebih terlihat */
+    --accent: #10b981;
+    --accent-glow: rgba(16, 185, 129, 0.2);
+    --text-primary: #f0fdf4;
+    --text-secondary: #94a3b8;
+    --danger: #ef4444;
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --font-outfit: 'Outfit', sans-serif;
+}
+
+/* ================================
+   1. NAVIGATION CONTAINER (BOTTOM BAR)
+   ================================ */
+.navigation {
+    position: fixed;
+    bottom: 24px;         /* Jarak dari bawah layar */
+    left: 50%;            /* Posisi tengah */
+    transform: translateX(-50%); /* Menyesuaikan agar benar-benar di tengah */
+    width: 90%;           /* Lebar responsive */
+    max-width: 420px;     /* Maksimal lebar di layar besar */
+    background: var(--bg-card);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 28px;  /* Sudut membulat */
+    padding: 8px 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    font-family: var(--font-outfit);
+    z-index: 9999;
+}
+
+.menu-cover {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* ================================
+   2. MENU ITEMS (DEFAULT STATE)
+   ================================ */
+.menu-cover a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: var(--text-secondary);
+    width: 70px;
+    height: 64px;
+    border-radius: 20px;
+    position: relative;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Sedikit transparansi pada background default */
+    background: transparent;
+}
+
+.icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-bottom: 2px;
+}
+
+/* Ukuran Icon */
+.icon svg {
+    width: 26px;
+    height: 26px;
+    transition: all 0.3s ease;
+}
+
+.label {
+    font-size: 11px;
+    font-weight: 500;
+    opacity: 0.8;
+    transition: all 0.3s ease;
+}
+
+/* Efek Hover (Opsional untuk Desktop) */
+.menu-cover a:hover {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* ================================
+   3. ACTIVE STATE (DINAMIS & HIJAU)
+   ================================ */
+.menu-cover a.active {
+    color: var(--accent); /* Warna Hijau --accent */
+    background: var(--accent-glow); /* Background glow hijau */
+    transform: translateY(-8px); /* Mengangkat tombol ke atas */
+    box-shadow: 0 4px 16px var(--accent-glow); /* Efek cahaya di bawah tombol */
+    border-radius: 4px 2px 10px 10px;
+}
+
+/* Memperbesar Icon saat aktif */
+.menu-cover a.active .icon {
+    transform: translateY(-2px) scale(1.15);
+}
+
+/* Mengubah warna teks Label menjadi putih/hijau terang saat aktif */
+.menu-cover a.active .label {
+    color: var(--text-primary);
+    font-weight: 600;
+    opacity: 1;
+}
+
+/* Garis Indikator di atas menu yang aktif (Opsional, menambah estetika) */
+.menu-cover a.active::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px;
+    height: 3px;
+    border-radius: 4px;
+    background-color: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+}
