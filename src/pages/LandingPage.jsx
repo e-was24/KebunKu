@@ -1,6 +1,6 @@
 import Monitor from '../components/Monitoring';
 import Nav from '../components/Navbar';
-import '../components/css/navbar.css';
+import '../components/css/Navbar.css';
 
 
 function LandingPage() {
