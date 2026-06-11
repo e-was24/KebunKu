@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import useEsp32Controller from '../hook/esp32Controller';
 import './css/monitor.css';
 import './js/Animation';
@@ -33,9 +33,75 @@ const Icons = {
         <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
             <path d="M18.36 6.64a9 9 0 1 1-12.73 0" /><line x1="12" y1="2" x2="12" y2="12" />
         </svg>
-    )
+    ),
+    Check: () => (
+        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+        </svg>
+    ),
+    Drop: () => (
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+        </svg>
+    ),
+    TempIcon: () => (
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z" />
+        </svg>
+    ),
+    Clock: () => (
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+        </svg>
+    ),
 };
 
+// --------------------------------------------------
+// Toast Notification
+// --------------------------------------------------
+const Toast = ({ toasts, onRemove }) => (
+    <div className="toast-container">
+        {toasts.map(t => (
+            <div key={t.id} className={`toast toast-${t.type} toast-enter`} onClick={() => onRemove(t.id)}>
+                <span className="toast-icon">
+                    {t.type === 'saved'   && <Icons.Check />}
+                    {t.type === 'moisture' && <Icons.Drop />}
+                    {t.type === 'temp'    && <Icons.TempIcon />}
+                    {t.type === 'timer'   && <Icons.Clock />}
+                </span>
+                <div className="toast-body">
+                    <span className="toast-title">{t.title}</span>
+                    <span className="toast-msg">{t.message}</span>
+                </div>
+            </div>
+        ))}
+    </div>
+);
+
+// --------------------------------------------------
+// Hook untuk toast
+// --------------------------------------------------
+const useToast = () => {
+    const [toasts, setToasts] = useState([]);
+
+    const addToast = useCallback((title, message, type = 'saved') => {
+        const id = Date.now();
+        setToasts(prev => [...prev, { id, title, message, type }]);
+        setTimeout(() => {
+            setToasts(prev => prev.filter(t => t.id !== id));
+        }, 4000);
+    }, []);
+
+    const removeToast = useCallback((id) => {
+        setToasts(prev => prev.filter(t => t.id !== id));
+    }, []);
+
+    return { toasts, addToast, removeToast };
+};
+
+// --------------------------------------------------
+// LogEntry
+// --------------------------------------------------
 const LogEntry = ({ row, isActive }) => {
     const prevValue = useRef(row.nilai);
     const [flash, setFlash] = useState('');
@@ -61,6 +127,9 @@ const LogEntry = ({ row, isActive }) => {
     );
 };
 
+// --------------------------------------------------
+// MiniFlowchart
+// --------------------------------------------------
 const MiniFlowchart = ({ data }) => {
     if (!data || data.length < 2) return null;
 
@@ -77,13 +146,16 @@ const MiniFlowchart = ({ data }) => {
 
     return (
         <div className="mini-flowchart">
-            <svg width="100%" height="auto" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
+            <svg width="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" style={{ display: 'block' }}>
                 <polyline fill="none" stroke="currentColor" strokeWidth="2" points={svgPoints} />
             </svg>
         </div>
     );
 };
 
+// --------------------------------------------------
+// getTempStatus
+// --------------------------------------------------
 const getTempStatus = (temp) => {
     if (temp === null) return { label: 'Menunggu data...', dotClass: '' };
     if (temp > 35)    return { label: 'Suhu Terlalu Tinggi', dotClass: 'danger-dot' };
@@ -91,6 +163,9 @@ const getTempStatus = (temp) => {
     return              { label: 'Suhu Normal', dotClass: 'healthy' };
 };
 
+// --------------------------------------------------
+// Monitoring
+// --------------------------------------------------
 function Monitoring() {
     const {
         moisture,
@@ -100,14 +175,38 @@ function Monitoring() {
         history,
         sendPumpCommand,
         sendSystemCommand,
-        downloadData
+        downloadData,
+        lastSaveEvent,      // { reason, waktu } — dari hook
     } = useEsp32Controller();
 
     const [isDetailActive, setIsDetailActive] = useState(false);
+    const { toasts, addToast, removeToast }   = useToast();
     const tempStatus = getTempStatus(temperature);
+
+    // Dengarkan event simpan dari hook
+    const prevSaveEvent = useRef(null);
+    useEffect(() => {
+        if (!lastSaveEvent) return;
+        if (prevSaveEvent.current === lastSaveEvent.id) return;
+        prevSaveEvent.current = lastSaveEvent.id;
+
+        const { reason } = lastSaveEvent;
+
+        if (reason.includes('1 jam')) {
+            addToast('Data Tersimpan', 'Backup otomatis 1 jam', 'timer');
+        } else if (reason.includes('kelembaban')) {
+            addToast('Data Tersimpan', `⚠️ ${reason}`, 'moisture');
+        } else if (reason.includes('suhu')) {
+            addToast('Data Tersimpan', `⚠️ ${reason}`, 'temp');
+        } else {
+            addToast('Data Tersimpan', reason, 'saved');
+        }
+    }, [lastSaveEvent, addToast]);
 
     return (
         <div className="monitoring-wrapper">
+            <Toast toasts={toasts} onRemove={removeToast} />
+
             <header className="dashboard-header">
                 <h1>Kebun<span className="accent">Ku</span> Monitoring</h1>
                 <p className="subtitle">Smart Agriculture System</p>
@@ -141,7 +240,6 @@ function Monitoring() {
                             {isDetailActive ? 'Sembunyikan' : 'Lihat Detail'}
                         </button>
                     </div>
-
                     <div className={`detail-content ${isDetailActive ? 'show' : ''}`}>
                         <div className="temp-metric">
                             <span className="label">Suhu DHT22</span>
