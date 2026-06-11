@@ -24,7 +24,7 @@
     width: 90%;           /* Lebar responsive */
     max-width: 420px;     /* Maksimal lebar di layar besar */
     background: var(--bg-card);
-    backdrop-filter: blur(16px);
+    backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid var(--glass-border);
     border-radius: 28px;  /* Sudut membulat */
